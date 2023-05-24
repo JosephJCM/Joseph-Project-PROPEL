@@ -7,5 +7,6 @@ Which Pokemon primary type has the best/worst mean stats (combination of defense
 How many grass types (my favorite type) are introduced in each generation? 
 
 Dataset link: https://www.kaggle.com/datasets/rounakbanik/pokemon
+Link to audio+video: https://ucsf.box.com/s/reygkjbztlf2yoi1rbix1th4cmh7y65k
 
 I also utilized ChatGPT to a large extent to learn/experiment with the coding I performed in this project. 
