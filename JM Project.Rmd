@@ -1,0 +1,184 @@
+---
+title: "Joseph Moreno R Notebook"
+output: html_notebook
+---
+Hello! The dataset I decided to use is "The Complete Pokemon Dataset", taken from Kaggle. This dataset contains all information of the names, types, abilities, stats, and other factors pertaining to each Pokemon from generation 1-7. Due to my interest in Pokemon since childhood, I thought this would be a fun dataset to experiment with and take a more exploratory approach to in regard to analysis. 
+Questions that I wanted to answer through analysis and visualization are present throughout the notebook but some examples include:
+How many Pokemon are introduced within each generation? 
+Which Pokemon primary type has the best/worst mean stats (combination of defense, attack, speed, special defense, and special attack)?
+How many grass types (my favorite type) are introduced in each generation? 
+
+Dataset link: https://www.kaggle.com/datasets/rounakbanik/pokemon
+
+```{r}
+library(tidyverse)
+```
+```{r}
+pokemon_df <- read_csv("pokemon.csv")
+```
+```{r}
+pokemon_df
+```
+```{r}
+head(pokemon_df)
+```
+
+```{r}
+#Tidy selection of just grass types (can have a second typing) throughout every generation from 1-6
+pokemon_df %>%
+    filter(type1 == "grass") %>%
+    select(name, type1, type2, generation)
+```
+
+```{r}
+#Select for pokemon that have the grass and poison dual typing, throughout the generations 
+pokemon_df %>%
+    filter(
+      type1 %in% c("grass"),
+      type2 == "poison") %>%
+    select(name, type1, type2, generation)
+    
+```
+
+```{r}
+#Select for grass type pokemon that have a %50 of being male, throughout the generations 
+pokemon_df %>%
+    filter(
+      type1 %in% c("grass"),
+      percentage_male == "50") %>%
+    select(name, percentage_male, type1, type2, generation)
+    
+```
+```{r}
+#How many pokemon are introduced in each generation, from 1-6? 
+pokemon_count <- data.frame(count(pokemon_df,generation))
+head(pokemon_count)
+```
+```{r}
+#How can we make this chart more clear? 
+colnames(pokemon_count)[1] <- "Generation"
+colnames(pokemon_count)[2] <- "Number of Pokemon Introduced"
+rownames(pokemon_count)[1] <- "Kanto"
+rownames(pokemon_count)[2] <- "Johto"
+rownames(pokemon_count)[3] <- "Hoenn"
+rownames(pokemon_count)[4] <- "Sinnoh"
+rownames(pokemon_count)[5] <- "Unova"
+rownames(pokemon_count)[6] <- "Kalos"
+head(pokemon_count)
+```
+```{r}
+#How can we visualize this with a bargraph?
+pokemon_count_bargraph = barplot(pokemon_count$`Number of Pokemon Introduced`)
+```
+```{r}
+#Again, can we make this more clear. The graph is extrememly vague and needs more detail
+x_labels <- c("Gen 1 (Kanto)", "Gen 2 (Johto)", "Gen 3 (Hoenn)", "Gen 4 (Sinnoh)", "Gen 5 (Unova)", "Gen 6 (Kalos)", "Gen 7 (Alola)")
+
+pokemon_count_bargraph = barplot(pokemon_count$`Number of Pokemon Introduced`,names.arg = x_labels)
+
+```
+
+```{r}
+#The x-axis labels, detailing the generations and regions, are only partially showing up....possibly from the size of the text? How can we change this to see all the labels?
+par(cex.axis = 0.5)
+
+pokemon_count_bargraph = barplot(pokemon_count$`Number of Pokemon Introduced`,names.arg = x_labels)
+```
+```{r}
+#This is somewhat bettter but now the text is too small. How can I have more control over specific variable to edit in this graph?
+install.packages("ggplot2")
+library(ggplot2)
+```
+```{r}
+#The utilization of ggplot allows for much more flexibility :). How can we clean this graph up and make it more visually pleasing? 
+ggplot(pokemon_count, aes(x = x_labels, y = pokemon_count$`Number of Pokemon Introduced`)) +
+  geom_bar(stat = "identity", width = 0.5, position = position_dodge(width = 0.8)) +
+  theme(panel.background = element_rect(fill = "white"))
+```
+
+```{r}
+#After much editing and playing around with the different variables I can manipulate with ggplot, I came to this final visualization to answer my question. 
+ggplot(pokemon_count, aes(y = x_labels, x = pokemon_count$`Number of Pokemon Introduced`)) +
+  geom_bar(stat = "identity", width = 0.5, position = position_dodge(width = 0.8)) +
+  theme(panel.background = element_rect(fill = "white")) + 
+  geom_bar(stat = "identity", fill = "black") +
+  theme(axis.text = element_text(color = "black")) +
+  labs(x = "Number of Pokemon Introduced") +
+  labs(y = "") +
+  theme(axis.text.y = element_text(size = 10)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 15))+
+  theme(axis.line.x = element_line(color = "black"))+
+  theme(axis.line.y = element_line(color = "black"))
+
+  
+```
+
+
+
+```{r}
+#group and summarize by type to see the mean base total stats for each pokemon type, effectively seeing which pokemon types have the best and worst stats. Which Pokemon primary type has the best/worst mean stats (combination of defense, attack, speed, special defense, and special attack)?
+pokemon_df %>%
+  group_by(type1) %>%
+  summarize(
+    mean_stats = mean(base_total),
+    sd_stats = sd(base_total)
+  )
+```
+```{r}
+#Is there a way we can visualize this to make it easy to interpret? Possibly with a pie chart? 
+categories <- c("Bug", "Dark", "Dragon", "Electric", "Fairy", "Fighting", "Fire", "Flying", "Ghost", "Grass", "Ground", "Ice", "Normal", "Poison", "Phychic", "Rock", "Steel", "Water")
+
+counts <- c(380, 449, 522, 436, 427, 414, 450, 453, 434, 412, 426, 433, 401, 399, 461, 447, 491, 426)
+
+summarized_data <- data.frame(Category = categories, Count = counts)
+
+pie_chart <- ggplot(data = summarized_data, aes(x = "", y = "Count", fill = Category)) +
+  geom_bar(stat = "identity") +
+  coord_polar("y", start = 0)
+
+pie_chart +
+  labs(title = "Pokemon Type1 Stats") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+```{r}
+#I was able to get the piechart to come out, but I don't think that it is accurately depicting the difference in mean stats of each primary type. In the interest of time, can we create another, more simple visualization to answer the question? 
+mean_stats_type1 <- aggregate (pokemon_df$base_total, by=list(type1=pokemon_df$type1), FUN=mean)
+sorted_mean_stats_type1 <- mean_stats_type1[order(mean_stats_type1$x),]
+```
+```{r}
+mean_stats_type1_graph = barplot(height=sorted_mean_stats_type1$x, names.arg = sorted_mean_stats_type1$type1, col="black", main="Mean Pokemon Type1 Stats", las=2)
+
+```
+
+```{r}
+#Which pokemon type has the highest/lowest mean value for each of the pokemon stats? 
+pokemon_df %>%
+  group_by(type1) %>%
+  summarize(
+    mean_speed = mean(speed),
+    mean_attack = mean(attack),
+    mean_defense = mean(defense),
+    mean_special_attack = mean(sp_attack),
+    mean_special_defense = mean(sp_defense)
+  )
+```
+
+```{r}
+#Since I'm biased towards grass pokemon, I want to know how many primary type grass pokemon are introduced in each generation, or specifically which generation introduced the most grass pokemon, thus being the best generation? 
+pokemon_count = count(pokemon_df, type1)
+grass_pokemon <- pokemon_df %>%
+    filter(type1 == "grass") %>%
+    select(name, type1, generation) %>%
+    group_by(generation, type1, name) %>% count()
+
+Grass_Pokemon_Generations <- ggplot(grass_pokemon, aes(y = n, x ="", fill= type1))
+Grass_Pokemon_Generations + geom_bar(stat = "identity") +
+  facet_grid(rows = vars(generation)) +
+  labs(title = "Number of Grass Types by Generation")
+```
+
+```
+
